@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You Are Stardust</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS for particle background and animations */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Removed overflow: hidden; to allow scrolling */
+        }
+
+        .particle {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: twinkle 10s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Loading spinner animation */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #a0a0ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Fade transitions for content */
+        .fade-enter-active {
+            transition: opacity 0.5s ease;
+        }
+        .fade-enter-from {
+            opacity: 0;
+        }
+        .fade-leave-to {
+            opacity: 0;
+        }
+
+        /* Custom scrollbar for explanation text */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-gray-900 to-black text-white relative">
+    <!-- Particle Background -->
+    <div id="particle-container" class="absolute inset-0 z-0"></div>
+
+    <!-- API Key Input Section -->
+    <div class="relative z-10 bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl shadow-xl p-4 mb-4 max-w-5xl w-full flex flex-col md:flex-row items-center justify-between gap-4 border border-gray-700">
+        <div class="flex-grow text-sm md:text-base text-center md:text-left">
+            <p>Current NASA API Key: <span id="current-api-key" class="font-mono text-purple-300">DEMO_KEY</span></p>
+            <p class="text-xs text-gray-400 mt-1">
+                (Demo key has rate limits. Get your own at <a href="https://api.nasa.gov/" target="_blank" class="text-blue-400 hover:underline">api.nasa.gov</a>)
+            </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+            <input type="text" id="api-key-input" placeholder="Enter your NASA API Key" class="flex-grow p-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button id="save-api-key-btn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors duration-200">
+                Save Key
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App Content -->
+    <div class="relative z-10 bg-gray-800 bg-opacity-70 backdrop-blur-md rounded-xl shadow-2xl p-8 max-w-5xl w-full flex flex-col lg:flex-row gap-8 items-center border border-gray-700">
+
+        <!-- Image and Info Section -->
+        <div class="lg:w-1/2 w-full flex flex-col items-center justify-center">
+            <div id="image-container" class="relative w-full h-auto max-h-[400px] rounded-lg overflow-hidden shadow-lg flex items-center justify-center bg-gray-900">
+                <!-- Added anchor tag around the image -->
+                <a id="apod-link" href="#" target="_blank" class="w-full h-full flex items-center justify-center">
+                    <img id="apod-image" src="" alt="Astronomy Picture of the Day" class="rounded-lg object-cover w-full h-full transition-opacity duration-500 fade-enter-from cursor-pointer">
+                </a>
+                <div id="loading-spinner" class="spinner absolute hidden"></div>
+            </div>
+            <p id="apod-title" class="text-lg font-semibold text-purple-300 mt-4 text-center transition-opacity duration-500 fade-enter-from"></p>
+            <p id="apod-explanation" class="text-sm text-gray-400 mt-2 text-left max-h-[150px] overflow-y-auto pr-2 custom-scrollbar transition-opacity duration-500 fade-enter-from"></p>
+        </div>
+
+        <!-- Text Explanation Section -->
+        <div class="lg:w-1/2 w-full text-center lg:text-left">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-6 leading-tight">
+                You Are <span id="stardust-span" class="inline-block relative">Stardust</span>
+            </h1>
+
+            <p class="text-lg text-gray-300 leading-relaxed mb-4">
+                Every atom in your body embarked on an incredible journey billions of years ago. From the oxygen you breathe to the iron in your blood, these fundamental building blocks were forged in the fiery hearts of distant stars.
+            </p>
+            <p class="text-lg text-gray-300 leading-relaxed mb-4">
+                Massive stars, far larger than our Sun, live fast and die spectacularly in events called <strong class="text-yellow-300">supernovae</strong>. These explosions are the universe's ultimate foundries, scattering heavy elements like <strong class="text-green-300">carbon</strong> and <strong class="text-red-300">oxygen</strong> across the cosmos.
+            </p>
+            <p class="text-lg text-gray-300 leading-relaxed">
+                Other elements, like <strong class="text-blue-300">hydrogen</strong> and <strong class="text-indigo-300">helium</strong>, were created in the Big Bang itself. Over eons, gravity pulled these elements together, forming new stars and planets – including our own Earth, where life, made of stardust, could finally emerge.
+            </p>
+            <p class="text-xl font-bold italic text-yellow-300 mt-6 animate-pulse">
+                You are, quite literally, a walking, talking piece of the universe's grand story.
+            </p>
+
+            <button id="next-image-btn" class="mt-8 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Explore Another Cosmic View
+            </button>
+        </div>
+    </div>
+
+    <!-- Message Box for feedback -->
+    <div id="message-box" class="fixed bottom-8 right-8 bg-green-600 text-white px-6 py-3 rounded-lg shadow-xl hidden opacity-0 transition-opacity duration-300 z-50">
+        API Key saved successfully!
+    </div>
+
+    <script>
+        const NASA_API_KEY_STORAGE_KEY = 'nasa_api_key';
+        let currentApiKey = 'DEMO_KEY'; // Default to DEMO_KEY
+
+        const apodImage = document.getElementById('apod-image');
+        const apodTitle = document.getElementById('apod-title');
+        const apodExplanation = document.getElementById('apod-explanation');
+        const nextImageBtn = document.getElementById('next-image-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const stardustSpan = document.getElementById('stardust-span');
+        const particleContainer = document.getElementById('particle-container');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const currentApiKeyDisplay = document.getElementById('current-api-key');
+        const messageBox = document.getElementById('message-box');
+        const apodLink = document.getElementById('apod-link'); // Get the new anchor tag
+
+        // --- Message Box Function ---
+        function showMessageBox(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = `fixed bottom-8 right-8 px-6 py-3 rounded-lg shadow-xl opacity-0 transition-opacity duration-300 z-50`;
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-600', 'text-white');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-600', 'text-white');
+            } else {
+                messageBox.classList.add('bg-blue-600', 'text-white');
+            }
+
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('opacity-100');
+            }, 10); // Small delay to allow CSS transition
+
+            setTimeout(() => {
+                messageBox.classList.remove('opacity-100');
+                messageBox.classList.add('opacity-0');
+                setTimeout(() => {
+                    messageBox.classList.add('hidden');
+                }, 300); // Wait for fade out
+            }, 3000); // Hide after 3 seconds
+        }
+
+        // --- API Key Management ---
+        function loadApiKey() {
+            const storedKey = localStorage.getItem(NASA_API_KEY_STORAGE_KEY);
+            if (storedKey) {
+                currentApiKey = storedKey;
+                currentApiKeyDisplay.textContent = storedKey;
+                apiKeyInput.value = storedKey; // Pre-fill input with saved key
+            } else {
+                currentApiKey = 'DEMO_KEY';
+                currentApiKeyDisplay.textContent = 'DEMO_KEY';
+                apiKeyInput.value = ''; // Clear input if no key saved
+            }
+        }
+
+        function saveApiKey() {
+            const newKey = apiKeyInput.value.trim();
+            const oldKey = currentApiKey; // Use currentApiKey, which reflects the active key
+
+            if (newKey) {
+                localStorage.setItem(NASA_API_KEY_STORAGE_KEY, newKey);
+                currentApiKey = newKey;
+                currentApiKeyDisplay.textContent = newKey;
+                showMessageBox('NASA API Key saved successfully!', 'success');
+                if (newKey !== oldKey) { // Only fetch if the key actually changed
+                    fetchAPODImage();
+                }
+            } else {
+                localStorage.removeItem(NASA_API_KEY_STORAGE_KEY); // Allow clearing the key
+                currentApiKey = 'DEMO_KEY';
+                currentApiKeyDisplay.textContent = 'DEMO_KEY';
+                showMessageBox('API Key cleared. Using DEMO_KEY.', 'info');
+                if (oldKey !== 'DEMO_KEY') { // Only fetch if a non-demo key was previously active and now cleared
+                    fetchAPODImage();
+                }
+            }
+        }
+
+        // --- Particle Background Animation ---
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            const size = Math.random() * 3 + 1; // 1 to 4px
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.top = `${Math.random() * 100}%`;
+            particle.style.animationDelay = `${Math.random() * 10}s`; // Stagger animation
+            particleContainer.appendChild(particle);
+
+            // Remove particle after animation to prevent DOM bloat
+            particle.addEventListener('animationend', () => {
+                particle.remove();
+            });
+        }
+
+        // Generate particles
+        for (let i = 0; i < 100; i++) {
+            createParticle();
+        }
+        setInterval(createParticle, 500); // Continuously add new particles
+
+        // --- UI State Management ---
+        function showLoading() {
+            // Apply fade-out classes
+            apodImage.classList.add('fade-leave-to');
+            apodTitle.classList.add('fade-leave-to');
+            apodExplanation.classList.add('fade-leave-to');
+            // Hide the image immediately to prevent flicker before spinner appears
+            apodImage.style.opacity = '0';
+            loadingSpinner.classList.remove('hidden');
+            apodLink.style.cursor = 'default'; // Change cursor while loading
+        }
+
+        function hideLoading() {
+            loadingSpinner.classList.add('hidden');
+            // Remove fade-out classes
+            apodImage.classList.remove('fade-leave-to');
+            apodTitle.classList.remove('fade-leave-to');
+            apodExplanation.classList.remove('fade-leave-to');
+            // Ensure opacity is 1 for the image to be visible
+            apodImage.style.opacity = '1';
+            apodLink.style.cursor = 'pointer'; // Restore pointer cursor
+        }
+
+        // --- APOD Fetching Logic ---
+        function getRandomPastDate() {
+            const today = new Date();
+            const randomDaysAgo = Math.floor(Math.random() * 365 * 10); // Up to 10 years ago for more variety
+            const pastDate = new Date(today);
+            pastDate.setDate(today.getDate() - randomDaysAgo);
+            return pastDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        }
+
+        async function fetchAPODImage(date = null) {
+            showLoading();
+            let url = `https://api.nasa.gov/planetary/apod?api_key=${currentApiKey}`;
+            if (date) {
+                url += `&date=${date}`;
+            }
+
+            console.log("Fetching APOD from URL:", url); // Log the URL being fetched
+
+            try {
+                const response = await fetch(url);
+                console.log("API Response Status:", response.status); // Log response status
+                if (!response.ok) {
+                    // Specific error handling for API key issues
+                    if (response.status === 403 || response.status === 400) { // Forbidden or Bad Request (often due to invalid key)
+                        showMessageBox('Invalid API Key or Rate Limit Exceeded. Please check your key or try later.', 'error');
+                        apodTitle.textContent = "API Key Error";
+                        apodExplanation.textContent = "Please ensure your NASA API key is correct and not exceeding rate limits. Using DEMO_KEY might help if you don't have your own.";
+                        apodImage.src = "https://placehold.co/400x300/660000/FFFFFF?text=API+Key+Error";
+                        apodLink.href = "#"; // Clear the link on error
+                        hideLoading();
+                        return; // Stop further processing
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log("APOD Data received:", data); // Log the full data object
+
+                if (data.media_type === 'image') {
+                    // Reset fade classes before setting new src to ensure transition applies
+                    apodImage.classList.remove('fade-enter-active', 'fade-enter-from');
+                    apodTitle.classList.remove('fade-enter-active', 'fade-enter-from');
+                    apodExplanation.classList.remove('fade-enter-active', 'fade-enter-from');
+
+                    // Set the link for the full resolution image
+                    apodLink.href = data.url;
+
+                    apodImage.onload = () => {
+                        console.log("Image loaded successfully:", apodImage.src);
+                        hideLoading();
+                        // Add fade-in classes after image loads and hideLoading completes
+                        apodImage.classList.add('fade-enter-active');
+                        apodTitle.classList.add('fade-enter-active');
+                        apodExplanation.classList.add('fade-enter-active');
+                    };
+                    // Handle potential onerror for image loading
+                    apodImage.onerror = () => {
+                        console.error("Image failed to load:", data.url);
+                        hideLoading();
+                        apodTitle.textContent = "Image Load Error";
+                        apodExplanation.textContent = "Could not load the image. The URL might be broken or inaccessible.";
+                        apodImage.src = "https://placehold.co/400x300/444444/FFFFFF?text=Image+Broken"; // Different placeholder for image load error
+                        apodLink.href = "#"; // Clear the link on error
+                    };
+                    apodImage.src = data.url; // Set the image source
+                } else {
+                    console.warn(`APOD for ${data.date} is not an image (it's a ${data.media_type}), fetching another...`);
+                    // Immediately hide loading and clear previous content if not an image
+                    hideLoading();
+                    apodTitle.textContent = "Not an Image Day!";
+                    apodExplanation.textContent = `The Astronomy Picture of the Day for ${data.date} is a ${data.media_type}. Trying to fetch another image...`;
+                    apodImage.src = "https://placehold.co/400x300/222222/FFFFFF?text=Not+an+Image"; // Placeholder for non-image days
+                    apodLink.href = "#"; // Clear the link for non-image days
+                    fetchAPODImage(getRandomPastDate()); // Try fetching another random date
+                }
+
+            } catch (error) {
+                console.error("An unexpected error occurred during APOD fetch:", error);
+                hideLoading();
+                apodTitle.textContent = "Error loading cosmic view.";
+                apodExplanation.textContent = `An unexpected error occurred: ${error.message}. Please try again later.`;
+                apodImage.src = "https://placehold.co/400x300/333333/FFFFFF?text=Cosmic+Error"; // Elegant placeholder
+                apodLink.href = "#"; // Clear the link on error
+            }
+        }
+
+        // --- Initial Load and Event Listeners ---
+        window.onload = () => {
+            loadApiKey(); // Load API key on startup
+            fetchAPODImage();
+
+            // Simple animation for "Stardust" text
+            stardustSpan.style.transition = 'transform 0.5s ease-out';
+            stardustSpan.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                stardustSpan.style.transform = 'scale(1)';
+            }, 500);
+        };
+
+        nextImageBtn.addEventListener('click', () => {
+            fetchAPODImage(getRandomPastDate());
+        });
+
+        saveApiKeyBtn.addEventListener('click', saveApiKey);
+        // Also allow saving by pressing Enter in the input field
+        apiKeyInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                saveApiKey();
+            }
+        });
+    </script>
+</body>
+</html>
